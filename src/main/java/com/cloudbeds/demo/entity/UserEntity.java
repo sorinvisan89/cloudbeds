@@ -4,6 +4,8 @@ import com.cloudbeds.demo.repository.converter.PasswordConverter;
 import lombok.Data;
 
 import javax.persistence.*;
+import java.util.ArrayList;
+import java.util.List;
 
 @Data
 @Entity
@@ -27,5 +29,10 @@ public class UserEntity {
     @Column(name = "PASSWORD")
     @Convert(converter = PasswordConverter.class)
     private String password;
+
+    @ManyToMany
+    @JoinTable(name = "user_addresses", joinColumns = @JoinColumn(name = "USER_ID", referencedColumnName = "ID"), inverseJoinColumns = @JoinColumn(name = "ADDRESS_ID", referencedColumnName = "ID"))
+    private List<AddressEntity> addresses = new ArrayList<>();
+
 
 }

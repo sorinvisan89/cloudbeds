@@ -1,30 +1,40 @@
 package com.cloudbeds.demo.service;
 
+import com.cloudbeds.demo.entity.AddressEntity;
 import com.cloudbeds.demo.entity.UserEntity;
-import com.cloudbeds.demo.exception.EmailAlreadyRegisteredException;
-import com.cloudbeds.demo.mapper.UserMapper;
-import com.cloudbeds.demo.model.CreateUserRequestDTO;
-import com.cloudbeds.demo.model.UserDTO;
+import com.cloudbeds.demo.exception.custom.EmailAlreadyRegisteredException;
+import com.cloudbeds.demo.exception.custom.UserNotFoundException;
+import com.cloudbeds.demo.mapper.CustomMapper;
+import com.cloudbeds.demo.model.response.UserResponseDTO;
+import com.cloudbeds.demo.model.request.AddUserAddressRequestDTO;
+import com.cloudbeds.demo.model.request.CreateUserRequestDTO;
+import com.cloudbeds.demo.repository.AddressRepository;
 import com.cloudbeds.demo.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
 public class UserService {
 
-    private final UserMapper userMapper;
+    private final CustomMapper customMapper;
     private final UserRepository userRepository;
+    private final AddressRepository addressRepository;
 
     @Autowired
-    public UserService(final UserMapper userMapper, final UserRepository userRepository) {
-        this.userMapper = userMapper;
+    public UserService(final CustomMapper customMapper, final UserRepository userRepository, final AddressRepository addressRepository) {
+        this.customMapper = customMapper;
         this.userRepository = userRepository;
+        this.addressRepository = addressRepository;
     }
 
-    public UserDTO createUser(final CreateUserRequestDTO createUserDTO) {
-        final UserEntity toPersist = userMapper.mapRequest(createUserDTO);
+    public UserResponseDTO createUser(final CreateUserRequestDTO createUserDTO) {
+        final UserEntity toPersist = customMapper.mapRequest(createUserDTO);
 
         userRepository.findUserByEmail(toPersist.getEmail())
                 .ifPresent(registeredUser -> {
@@ -33,6 +43,29 @@ public class UserService {
 
         final UserEntity saved = userRepository.save(toPersist);
 
-        return userMapper.mapResponse(saved);
+        return customMapper.mapResponse(saved);
     }
+
+    public UserResponseDTO addUserAddress(final Integer userId, final AddUserAddressRequestDTO userAddressRequestDTO) {
+        final UserEntity existing = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException(userId));
+
+        final AddressEntity newAddress = customMapper.mapRequest(userAddressRequestDTO);
+        final AddressEntity saveAddress = addressRepository.save(newAddress);
+
+        existing.getAddresses().add(saveAddress);
+        final UserEntity saved = userRepository.save(existing);
+
+        return customMapper.mapResponse(saved);
+    }
+
+    public List<UserResponseDTO> getUsersByCountry(final String country, final int page, final int limit) {
+        final PageRequest pageRequest = PageRequest.of(Math.max(page, 0), limit);
+        final List<UserEntity> results = userRepository.findUsersByCountry(country, pageRequest);
+
+        return results.stream()
+                .map(customMapper::mapResponse)
+                .collect(Collectors.toList());
+    }
+
 }

@@ -1,4 +1,4 @@
-package com.cloudbeds.demo.exception;
+package com.cloudbeds.demo.exception.handler;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;

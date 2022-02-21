@@ -1,5 +1,7 @@
-package com.cloudbeds.demo.exception;
+package com.cloudbeds.demo.exception.handler;
 
+import com.cloudbeds.demo.exception.custom.EmailAlreadyRegisteredException;
+import com.cloudbeds.demo.exception.custom.UserNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -10,7 +12,7 @@ import org.springframework.web.context.request.WebRequest;
 
 import java.util.List;
 
-import static org.springframework.http.HttpStatus.BAD_REQUEST;
+import static org.springframework.http.HttpStatus.*;
 
 @Slf4j
 @ControllerAdvice
@@ -26,9 +28,17 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(EmailAlreadyRegisteredException.class)
-    @ResponseStatus(BAD_REQUEST)
+    @ResponseStatus(CONFLICT)
     @ResponseBody
     public ErrorResponse handleUserAlreadyRegistered(final EmailAlreadyRegisteredException exception, final WebRequest webRequest) {
+        logError(exception, webRequest);
+        return ErrorResponse.errorResponse(exception.getMessage(), fullUrl(webRequest));
+    }
+
+    @ExceptionHandler(UserNotFoundException.class)
+    @ResponseStatus(NOT_FOUND)
+    @ResponseBody
+    public ErrorResponse handleUserNotFound(final UserNotFoundException exception, final WebRequest webRequest) {
         logError(exception, webRequest);
         return ErrorResponse.errorResponse(exception.getMessage(), fullUrl(webRequest));
     }

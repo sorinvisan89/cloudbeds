@@ -1,10 +1,8 @@
-package com.cloudbeds.demo.model;
+package com.cloudbeds.demo.model.request;
 
-import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.Data;
 
 import javax.validation.constraints.Email;
-import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 

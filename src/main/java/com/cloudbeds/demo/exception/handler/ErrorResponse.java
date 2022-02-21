@@ -1,4 +1,4 @@
-package com.cloudbeds.demo.exception;
+package com.cloudbeds.demo.exception.handler;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AccessLevel;

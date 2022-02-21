@@ -1,9 +1,11 @@
-package com.cloudbeds.demo.model;
+package com.cloudbeds.demo.model.response;
 
 import lombok.Data;
 
+import java.util.List;
+
 @Data
-public class UserDTO {
+public class UserResponseDTO {
 
     private Integer userId;
 
@@ -12,4 +14,6 @@ public class UserDTO {
     private String firstName;
 
     private String email;
+
+    private List<AddressResponseDTO> addresses;
 }

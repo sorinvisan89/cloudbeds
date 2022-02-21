@@ -1,4 +1,4 @@
-package com.cloudbeds.demo.exception;
+package com.cloudbeds.demo.exception.custom;
 
 public class EmailAlreadyRegisteredException extends RuntimeException {
 
