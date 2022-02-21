@@ -1,7 +1,7 @@
 syntax = "proto3";
 
 option java_multiple_files = true;
-package com.baeldung.grpc;
+package com.cloudbeds.demo.generated.grpc;
 
 message Address {
   int32 addressId= 1;
@@ -32,6 +32,6 @@ message ErrorResponse {
   int32 userId = 1;
 }
 
-service HelloService {
+service UserService {
   rpc retrieveUser(GetUserRequest) returns (GetUserResponse);
 }

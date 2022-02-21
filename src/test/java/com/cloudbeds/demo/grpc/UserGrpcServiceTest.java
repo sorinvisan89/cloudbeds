@@ -1,12 +1,13 @@
 package com.cloudbeds.demo.grpc;
 
-import com.baeldung.grpc.Address;
-import com.baeldung.grpc.GetUserRequest;
-import com.baeldung.grpc.GetUserResponse;
-import com.baeldung.grpc.HelloServiceGrpc;
+import com.cloudbeds.demo.generated.grpc.Address;
+import com.cloudbeds.demo.generated.grpc.GetUserRequest;
+import com.cloudbeds.demo.generated.grpc.GetUserResponse;
+import com.cloudbeds.demo.generated.grpc.UserServiceGrpc;
 import com.cloudbeds.demo.entity.AddressEntity;
 import com.cloudbeds.demo.entity.UserEntity;
 import com.cloudbeds.demo.repository.UserRepository;
+import com.cloudbeds.demo.service.UserGrpcService;
 import io.grpc.StatusRuntimeException;
 import io.grpc.inprocess.InProcessChannelBuilder;
 import io.grpc.inprocess.InProcessServerBuilder;
@@ -27,7 +28,7 @@ import static org.mockito.Mockito.*;
 
 public class UserGrpcServiceTest {
 
-    private HelloServiceGrpc.HelloServiceBlockingStub blockingStub;
+    private UserServiceGrpc.UserServiceBlockingStub blockingStub;
 
     @Rule
     public final GrpcCleanupRule grpcCleanup = new GrpcCleanupRule();
@@ -44,11 +45,11 @@ public class UserGrpcServiceTest {
 
         grpcCleanup.register(InProcessServerBuilder.forName(serverName)
                 .directExecutor()
-                .addService(new UserGrpcServiceImpl(userRepository))
+                .addService(new UserGrpcService(userRepository))
                 .build()
                 .start());
 
-        blockingStub = HelloServiceGrpc.newBlockingStub(grpcCleanup.register(InProcessChannelBuilder.forName(serverName)
+        blockingStub = UserServiceGrpc.newBlockingStub(grpcCleanup.register(InProcessChannelBuilder.forName(serverName)
                 .directExecutor()
                 .build()));
     }
