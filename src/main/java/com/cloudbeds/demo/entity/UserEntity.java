@@ -1,7 +1,7 @@
 package com.cloudbeds.demo.entity;
 
 import com.cloudbeds.demo.converter.PasswordConverter;
-import lombok.Data;
+import lombok.*;
 
 import javax.persistence.*;
 import java.util.ArrayList;
@@ -9,6 +9,9 @@ import java.util.List;
 
 @Data
 @Entity
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Table(name = "USERS")
 public class UserEntity {
 

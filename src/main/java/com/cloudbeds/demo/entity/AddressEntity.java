@@ -1,11 +1,14 @@
 package com.cloudbeds.demo.entity;
 
-import lombok.Data;
+import lombok.*;
 
 import javax.persistence.*;
 
 @Data
 @Entity
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Table(name = "ADDRESSES")
 public class AddressEntity {
 
