@@ -1,6 +1,6 @@
 package com.cloudbeds.demo.entity;
 
-import com.cloudbeds.demo.repository.converter.PasswordConverter;
+import com.cloudbeds.demo.converter.PasswordConverter;
 import lombok.Data;
 
 import javax.persistence.*;

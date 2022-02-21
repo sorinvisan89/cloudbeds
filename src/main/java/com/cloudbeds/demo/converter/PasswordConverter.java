@@ -1,4 +1,7 @@
-package com.cloudbeds.demo.repository.converter;
+package com.cloudbeds.demo.converter;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 
 import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
@@ -11,12 +14,18 @@ import java.util.Base64;
 public class PasswordConverter implements AttributeConverter<String, String> {
 
     private static final String ALGORITHM = "AES/ECB/PKCS5Padding";
-    private static final byte[] KEY = "MySuperSecretKey".getBytes();
     private static final String ENCRYPTION_ALGORITHM = "AES";
+
+    private final byte[] encryptionKey;
+
+    @Autowired
+    public PasswordConverter(@Value("${password.encryption.key}") final String encryptionKey) {
+        this.encryptionKey = encryptionKey.getBytes();
+    }
 
     @Override
     public String convertToDatabaseColumn(final String toEncode) {
-        final Key key = new SecretKeySpec(KEY, ENCRYPTION_ALGORITHM);
+        final Key key = new SecretKeySpec(this.encryptionKey, ENCRYPTION_ALGORITHM);
         try {
             Cipher cipher = Cipher.getInstance(ALGORITHM);
             cipher.init(Cipher.ENCRYPT_MODE, key);
@@ -29,7 +38,7 @@ public class PasswordConverter implements AttributeConverter<String, String> {
 
     @Override
     public String convertToEntityAttribute(final String dbData) {
-        final Key key = new SecretKeySpec(KEY, ENCRYPTION_ALGORITHM);
+        final Key key = new SecretKeySpec(this.encryptionKey, ENCRYPTION_ALGORITHM);
         try {
             final Cipher cipher = Cipher.getInstance(ALGORITHM);
             cipher.init(Cipher.DECRYPT_MODE, key);
