@@ -26,7 +26,7 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-public class UserGrpcServiceTest {
+public class UserGrpcServerTest {
 
     private UserServiceGrpc.UserServiceBlockingStub blockingStub;
 

@@ -34,7 +34,7 @@ public class UserEntity {
     private String password;
 
     @ManyToMany
-    @JoinTable(name = "user_addresses", joinColumns = @JoinColumn(name = "USER_ID", referencedColumnName = "ID"), inverseJoinColumns = @JoinColumn(name = "ADDRESS_ID", referencedColumnName = "ID"))
+    @JoinTable(name = "USER_ADDRESSES", joinColumns = @JoinColumn(name = "USER_ID", referencedColumnName = "ID"), inverseJoinColumns = @JoinColumn(name = "ADDRESS_ID", referencedColumnName = "ID"))
     private List<AddressEntity> addresses = new ArrayList<>();
 
 

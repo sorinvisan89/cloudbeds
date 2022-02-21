@@ -31,4 +31,7 @@ public class AddressEntity {
 
     @Column(name = "COUNTRY", nullable = false)
     private String country;
+
+    @Column(name = "ZIP", nullable = false)
+    private String zip;
 }

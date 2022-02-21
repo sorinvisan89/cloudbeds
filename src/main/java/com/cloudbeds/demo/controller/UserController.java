@@ -5,6 +5,7 @@ import com.cloudbeds.demo.model.request.CreateUserRequestDTO;
 import com.cloudbeds.demo.model.response.UserResponseDTO;
 import com.cloudbeds.demo.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -77,6 +78,7 @@ public class UserController {
             )
     )
     ResponseEntity<UserResponseDTO> addAddress(
+            @Parameter(description = "Id of the user", required = true)
             @PathVariable(name = "userId") final Integer userId,
             @RequestBody @Valid @NotNull final AddUserAddressRequestDTO addAddressDTO) {
         final UserResponseDTO result = userService.addUserAddress(userId, addAddressDTO);
@@ -96,8 +98,11 @@ public class UserController {
                     @ApiResponse(description = "Internal error", responseCode = "500")
             })
     ResponseEntity<List<UserResponseDTO>> getUsersByCountry(
+            @Parameter(description = "The country to search by", required = true)
             @RequestParam(value = "country") final String country,
+            @Parameter(description = "The page to retrieve", example = "0")
             @RequestParam(value = "page", required = false, defaultValue = "0") final int page,
+            @Parameter(description = "The number of results per page", example = "10")
             @RequestParam(value = "limit", required = false, defaultValue = "10") final int limit) {
         final List<UserResponseDTO> result = userService.getUsersByCountry(country, page, limit);
         return ResponseEntity.ok(result);
