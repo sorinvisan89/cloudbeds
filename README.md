@@ -27,6 +27,14 @@ It consist of a GRPC server which has one operation:
     mvn clean install -DskipIT
     ```
 
+###Screenshots
+
+###Integration tests
+![Integration_tests](https://github.com/sorinvisan89/cloudbeds/blob/main/images/integration-tests.png)
+
+
+
+
 ### Integration tests
 Simply run a ``mvn clean install`` in the parent project folder.
 
@@ -80,8 +88,8 @@ During the mvn **verify step**, the integration tests are run against the **actu
 
 This setup is as close as possible to the one in production.
 
-### Flyway
-**Database versioning system**.
+###Flyway
+**Database versioning system**
 This is used to ensure consistency in the database structure(DDL) on a server.
 
 ###JSON Path
