@@ -77,7 +77,7 @@ The in memory DB used for running the unit/service/controller tests.
 ### REST APIs
 Communication mechanism for the main APIs(create user/address and search users by country).
 
-###Swagger
+### Swagger
 Swagger UI is used in order to facilitate working with the REST endpoints.
 
 ### GRPC
@@ -89,25 +89,25 @@ During the mvn **verify step**, the integration tests are run against the **actu
 
 This setup is as close as possible to the one in production.
 
-###Flyway
+### Flyway
 **Database versioning system**
 This is used to ensure consistency in the database structure(DDL) on a server.
 
-###JSON Path
+### JSON Path
 This is used to assert json values on response paths during integration tests.
 
-###MapStruct
+### MapStruct
 This is used as a mapper for the DTO between entities and vice-versa.
 
-###Docker compose
+### Docker compose
 Used to bring up all required services(mysql, app).
 
-###Password encryption
+### Password encryption
 The passwords are stored encrypted in the DB.
 
-###Validations
+### Validations
 DTOs are validated against messages from a resource bundle.
 
-###Paginated Search
+### Paginated Search
 The search endpoint is paginated.
 
