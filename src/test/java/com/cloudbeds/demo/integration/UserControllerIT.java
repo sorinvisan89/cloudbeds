@@ -2,8 +2,8 @@ package com.cloudbeds.demo.integration;
 
 import com.google.common.collect.ImmutableMap;
 import com.jayway.jsonpath.JsonPath;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.Before;
+import org.junit.Test;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -26,7 +26,7 @@ public class UserControllerIT {
 
     private HttpClient httpClient;
 
-    @BeforeEach
+    @Before
     public void setup() {
         this.httpClient = createHttpClient();
     }

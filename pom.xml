@@ -207,7 +207,6 @@
                 <version>${plugin.failsafe.version}</version>
                 <configuration>
                     <skipITs>${skipIT}</skipITs>
-                    <redirectTestOutputToFile>true</redirectTestOutputToFile>
                 </configuration>
                 <executions>
                     <execution>
