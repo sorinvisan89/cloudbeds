@@ -39,7 +39,7 @@ public class UserControllerIT {
                 .uri(buildCreateUserRequestUrl())
                 .POST(
                         HttpRequest.BodyPublishers.ofInputStream(() ->
-                                UserControllerIT.class.getResourceAsStream("/add_user_valid_1.json")))
+                                UserControllerIT.class.getResourceAsStream("/add_user_valid.json")))
                 .build();
 
         final HttpResponse<String> response = this.httpClient.send(request, HttpResponse.BodyHandlers.ofString());
