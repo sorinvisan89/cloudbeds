@@ -5,3 +5,24 @@ services:
     ports:
       - "8080:8080"
       - "8081:8081"
+    depends_on:
+      mysql-demo:
+        condition: service_healthy
+
+  mysql-demo:
+    container_name: mysql-demo-sql
+    image: mysql
+    restart: always
+    command: mysqld --default-authentication-plugin=mysql_native_password
+    ports:
+      - "1111:3306"
+    healthcheck:
+      test: mysqladmin ping -h 127.0.0.1 -u $$MYSQL_USER --password=$$MYSQL_PASSWORD
+      timeout: 3s
+      retries: 20
+
+    environment:
+      MYSQL_DATABASE: "demo"
+      MYSQL_USER: "demo"
+      MYSQL_PASSWORD: "demo"
+      MYSQL_ROOT_PASSWORD: "demo"
