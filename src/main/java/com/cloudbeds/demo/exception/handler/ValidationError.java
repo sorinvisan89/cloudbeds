@@ -19,11 +19,11 @@ public class ValidationError {
     private String field;
     private String message;
 
-    public static ValidationError validationError(String field, String message) {
+    public static ValidationError validationError(final String field, final String message) {
         return new ValidationError(field, message);
     }
 
-    public static List<ValidationError> fromException(MethodArgumentNotValidException exception) {
+    public static List<ValidationError> fromException(final MethodArgumentNotValidException exception) {
         return Optional.of(exception.getBindingResult())
                 .map(Errors::getFieldErrors)
                 .filter(fieldErrors -> !fieldErrors.isEmpty())

@@ -1,6 +1,5 @@
 package com.cloudbeds.demo.integration;
 
-import com.google.common.collect.ImmutableMap;
 import com.jayway.jsonpath.JsonPath;
 import org.junit.Before;
 import org.junit.Test;
@@ -45,7 +44,7 @@ public class UserControllerIT {
         final HttpResponse<String> response = this.httpClient.send(request, HttpResponse.BodyHandlers.ofString());
         assertHttpResponseStatusCodeInSuccessRange(response);
 
-        final Map<String, String> expected = ImmutableMap.of(
+        final Map<String, String> expected = Map.of(
                 "$.firstName", "sorin",
                 "$.lastName", "visan",
                 "$.email", "sorin2@yahoo.com"

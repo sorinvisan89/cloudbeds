@@ -35,22 +35,24 @@ public class UserGrpcService extends UserServiceImplBase {
         log.info("Request received from client: " + request);
 
         final int userId = request.getUserId();
-        final Optional<UserEntity> existingUser = userRepository.findById(userId);
 
-        if (existingUser.isPresent()) {
-            final GetUserResponse response = buildResponse(existingUser.get());
-            responseObserver.onNext(response);
-            responseObserver.onCompleted();
-        } else {
-            final Metadata.Key<ErrorResponse> errorResponseKey = ProtoUtils.keyForProto(ErrorResponse.getDefaultInstance());
-            final ErrorResponse errorResponse = ErrorResponse.newBuilder()
-                    .build();
-            final Metadata metadata = new Metadata();
-            metadata.put(errorResponseKey, errorResponse);
-            responseObserver.onError(io.grpc.Status.INVALID_ARGUMENT.withDescription(String.format("The user with id %d does not exists!", userId))
-                    .asRuntimeException(metadata));
-        }
+        userRepository.findById(userId)
+                .ifPresentOrElse(foundUser -> {
+                            final GetUserResponse response = buildResponse(foundUser);
+                            responseObserver.onNext(response);
+                            responseObserver.onCompleted();
+                        },
+                        () -> {
+                            log.warn(String.format("User with id: %d does not exist", userId));
 
+                            final Metadata.Key<ErrorResponse> errorResponseKey = ProtoUtils.keyForProto(ErrorResponse.getDefaultInstance());
+                            final ErrorResponse errorResponse = ErrorResponse.newBuilder()
+                                    .build();
+                            final Metadata metadata = new Metadata();
+                            metadata.put(errorResponseKey, errorResponse);
+                            responseObserver.onError(io.grpc.Status.INVALID_ARGUMENT.withDescription(String.format("The user with id %d does not exists!", userId))
+                                    .asRuntimeException(metadata));
+                        });
     }
 
     private GetUserResponse buildResponse(final UserEntity entity) {
