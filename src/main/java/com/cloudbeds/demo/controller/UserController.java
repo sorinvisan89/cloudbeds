@@ -56,7 +56,8 @@ public class UserController {
                 .fromCurrentRequest().path("/{id}")
                 .buildAndExpand(result.getUserId()).toUri();
 
-        return ResponseEntity.created(newUserLocation).build();
+        return ResponseEntity.created(newUserLocation)
+                .body(result);
     }
 
     @PostMapping("/user/{userId}/address")
