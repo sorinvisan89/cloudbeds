@@ -113,6 +113,18 @@
             <scope>test</scope>
         </dependency>
 
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-engine</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <scope>test</scope>
+        </dependency>
+
     </dependencies>
 
     <build>
@@ -196,7 +208,6 @@
                 <configuration>
                     <skipITs>${skipIT}</skipITs>
                     <redirectTestOutputToFile>true</redirectTestOutputToFile>
-                    <rerunFailingTestsCount>3</rerunFailingTestsCount>
                 </configuration>
                 <executions>
                     <execution>
@@ -222,6 +233,37 @@
 
                     <autoCreateCustomNetworks>true</autoCreateCustomNetworks>
                     <images>
+
+                        <image>
+                            <name>mysql</name>
+                            <alias>mysql-it</alias>
+                            <run>
+                                <namingStrategy>alias</namingStrategy>
+                                <network>
+                                    <mode>custom</mode>
+                                    <name>it-tests</name>
+                                    <alias>mysql-it</alias>
+                                </network>
+                                <ports>
+                                    <port>1111:3306</port>
+                                </ports>
+                                <wait>
+                                    <log>MySQL init process done. Ready for start up.</log>
+                                    <time>30000</time>
+                                </wait>
+                                <env>
+                                    <MYSQL_ROOT_PASSWORD>demo</MYSQL_ROOT_PASSWORD>
+                                    <MYSQL_USER>demo</MYSQL_USER>
+                                    <MYSQL_PASSWORD>demo</MYSQL_PASSWORD>
+                                    <MYSQL_DATABASE>demo</MYSQL_DATABASE>
+                                </env>
+                                <log>
+                                    <prefix>MYSQL</prefix>
+                                    <color>red</color>
+                                </log>
+                            </run>
+                        </image>
+
                         <image>
                             <alias>cloudbeds-api</alias>
                             <name>com.cloudbeds/${project.artifactId}:${project.version}</name>
@@ -244,8 +286,12 @@
                                     <time>200000</time>
                                 </wait>
                                 <log>
+                                    <prefix>CLOUDBEDS</prefix>
                                     <color>cyan</color>
                                 </log>
+                                <dependsOn>
+                                    <container>mysql-it</container>
+                                </dependsOn>
                             </run>
                         </image>
                     </images>

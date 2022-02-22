@@ -6,7 +6,6 @@ import com.cloudbeds.demo.model.request.AddUserAddressRequestDTO;
 import com.cloudbeds.demo.model.request.CreateUserRequestDTO;
 import com.cloudbeds.demo.model.response.UserResponseDTO;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.jdbc.EmbeddedDatabaseConnection;
@@ -42,8 +41,6 @@ public class UserControllerTest {
 
     @Autowired
     private TestRestTemplate restTemplate;
-
-    private static final ObjectMapper objectMapper = new ObjectMapper();
 
     private String context() {
         return "http://localhost:" + port;
