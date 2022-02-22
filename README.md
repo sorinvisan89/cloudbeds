@@ -29,6 +29,9 @@ It consist of a GRPC server which has one operation:
 
 ### Screenshots
 
+### System tests
+![System_tests](https://github.com/sorinvisan89/cloudbeds/blob/main/images/system-tests.png)
+
 ### Integration tests
 ![Integration_tests](https://github.com/sorinvisan89/cloudbeds/blob/main/images/integration-tests.png)
 
@@ -48,8 +51,9 @@ Simply run a ``docker-compose up --build``in the parent project folder.
 This will build up the application and start a container the app and another container with MySQL.
 **The tests are being skipped at this stage**.
 
-###Swagger
+### Swagger
 The swagger endpoints are available at:
+
 http://localhost:8080/swagger-ui.html
 
 ## Technologies and features
