@@ -1,5 +1,5 @@
 # Cloudbeds Microservice API
-This a POC Microservice implemented based on the given requirements.
+This is a POC Microservice implemented based on the given requirements.
 It consists of a single REST controller which has 3 operations:
 1) Create an user
 2) Add an address to that user
