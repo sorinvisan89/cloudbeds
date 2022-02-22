@@ -5,7 +5,7 @@ It consists of a single REST controller which has 3 operations:
 2) Add an address to that user
 3) Search users by country
 
-It consist of a GRPC server which has one operation:
+It consists of a GRPC server which has one operation:
 1) Retrieve an user by Id.
 
 ## How to run
@@ -70,7 +70,7 @@ Also dockerized as a build step in a multi-stage dockerfile.
 The docker imaged used for this is: **maven:3.6.0-jdk-11-slim**
 
 ### Docker Engine: 20.10.8
-The docker engine tested against and required to run the **docker-compose** file.
+The docker engine tested against and required to run the **docker-compose** file and build the docker image.
 
 ### MySQL: 8.0
 The SQL persistence provider. It is pulled and ran as a docker image from the docker hub.
@@ -85,16 +85,17 @@ Communication mechanism for the main APIs(create user/address and search users b
 Swagger UI is used in order to facilitate working with the REST endpoints.
 
 ### GRPC
-Communication mechanism for the secondary APIs(retrieve users by Id).
+Communication mechanism for the secondary APIs(retrieve user by id).
 
 ### FailSafe Maven plugin
 This is used for integration tests.
-During the mvn **verify step**, the integration tests are run against the **actual containers** which are started as a pre-requisite.
+During the mvn **verify step**, the integration tests are run against **actual containers** which are started as a pre-requisite.
 
 This setup is as close as possible to the one in production.
 
 ### Flyway
 **Database versioning system**
+
 This is used to ensure consistency in the database structure(DDL) on a server.
 
 ### JSON Path
