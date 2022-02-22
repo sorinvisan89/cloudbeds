@@ -1,23 +1,47 @@
 # Cloudbeds Microservice API
 This a POC Microservice implemented based on the given requirements.
+It consists of a single REST controller which has 3 operations:
+1) Create an user
+2) Add an address to that user
+3) Search users by country
+
+It consist of a GRPC server which has one operation:
+1) Retrieve an user by Id.
 
 ## How to run
 
+### Prerequisites
+
+- Docker engine must be installed.
+  
+- **DOCKER_HOST** must be defined as an **environment variable in order to run the integration tests**.
+  
+    For Windows and Linux this shouldn't be an issue.
+  
+    But for MacOS this should be done with: 
+    ````
+    export DOCKER_HOST=unix:///var/run/docker.sock
+    ````
+    You can skip the integration tests with:
+    ```
+    mvn clean install -DskipIT
+    ```
+
 ### Integration tests
-Simply run a **mvn clean install** in the parent project folder.
+Simply run a ``mvn clean install`` in the parent project folder.
 
 This will build and run a container with the app together with its dependencies(mysql).
 Once everything is done, the integration tests will be run against those containers.
 When finished, containers are torn down.
 
 ### Application
-Simply run a **docker-compose up --build** in the parent project folder.
+Simply run a ``docker-compose up --build``in the parent project folder.
 This will build up the application and start a container the app and another container with MySQL.
 **The tests are being skipped at this stage**.
 
 ###Swagger
 The swagger endpoints are available at:
-http://localhost:8080/swagger-ui/index.html
+http://localhost:8080/swagger-ui.html
 
 ## Technologies and features
 
@@ -50,7 +74,7 @@ Swagger UI is used in order to facilitate working with the REST endpoints.
 ### GRPC
 Communication mechanism for the secondary APIs(retrieve users by Id).
 
-### FailSafe plugin
+### FailSafe Maven plugin
 This is used for integration tests.
 During the mvn **verify step**, the integration tests are run against the **actual containers** which are started as a pre-requisite.
 
