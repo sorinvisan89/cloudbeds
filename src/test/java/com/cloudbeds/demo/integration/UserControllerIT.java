@@ -137,6 +137,98 @@ public class UserControllerIT {
         assertJsonPathsWithValues(addressResponse, expected);
     }
 
+    @Test
+    public void getUsers_whenCalledWithCountry_shouldReturnExpected() throws IOException, InterruptedException {
+
+        //Add first user
+
+        final HttpRequest userRequest1 = HttpRequest.newBuilder()
+                .header(CONTENT_TYPE, APPLICATION_JSON)
+                .uri(buildCreateUserRequestUrl())
+                .POST(
+                        HttpRequest.BodyPublishers.ofInputStream(() ->
+                                UserControllerIT.class.getResourceAsStream("/add_user_by_country_1.json")))
+                .build();
+
+        final HttpResponse<String> userResponse1 = this.httpClient.send(userRequest1, HttpResponse.BodyHandlers.ofString());
+        assertHttpResponseStatusCodeInSuccessRange(userResponse1);
+
+        final String createdPath1 = userResponse1.headers().allValues("location")
+                .stream()
+                .findFirst()
+                .orElse(null);
+
+        assertThat(createdPath1).isNotEqualTo(null);
+        final String userId1 = createdPath1.substring(createdPath1.lastIndexOf("/") + 1);
+
+        final HttpRequest addressRequest1 = HttpRequest.newBuilder()
+                .header(CONTENT_TYPE, APPLICATION_JSON)
+                .uri(buildAddAddressToUserRequestUrl(userId1))
+                .POST(
+                        HttpRequest.BodyPublishers.ofInputStream(() ->
+                                UserControllerIT.class.getResourceAsStream("/add_address_by_country_1.json")))
+                .build();
+
+        final HttpResponse<String> addressResponse1 = this.httpClient.send(addressRequest1, HttpResponse.BodyHandlers.ofString());
+        assertHttpResponseStatusCodeInSuccessRange(addressResponse1);
+
+        //Add second user
+
+        final HttpRequest userRequest2 = HttpRequest.newBuilder()
+                .header(CONTENT_TYPE, APPLICATION_JSON)
+                .uri(buildCreateUserRequestUrl())
+                .POST(
+                        HttpRequest.BodyPublishers.ofInputStream(() ->
+                                UserControllerIT.class.getResourceAsStream("/add_user_by_country_3.json")))
+                .build();
+
+        final HttpResponse<String> userResponse2 = this.httpClient.send(userRequest2, HttpResponse.BodyHandlers.ofString());
+        assertHttpResponseStatusCodeInSuccessRange(userResponse2);
+
+        final String createdPath2 = userResponse2.headers().allValues("location")
+                .stream()
+                .findFirst()
+                .orElse(null);
+
+        assertThat(createdPath2).isNotEqualTo(null);
+        final String userId2 = createdPath2.substring(createdPath2.lastIndexOf("/") + 1);
+
+        final HttpRequest addressRequest2 = HttpRequest.newBuilder()
+                .header(CONTENT_TYPE, APPLICATION_JSON)
+                .uri(buildAddAddressToUserRequestUrl(userId2))
+                .POST(
+                        HttpRequest.BodyPublishers.ofInputStream(() ->
+                                UserControllerIT.class.getResourceAsStream("/add_address_by_country_3.json")))
+                .build();
+
+        final HttpResponse<String> addressResponse2 = this.httpClient.send(addressRequest2, HttpResponse.BodyHandlers.ofString());
+        assertHttpResponseStatusCodeInSuccessRange(addressResponse2);
+
+        // Now search the users by country
+
+        final HttpRequest searchUsersRequest = HttpRequest.newBuilder()
+                .header(CONTENT_TYPE, APPLICATION_JSON)
+                .uri(buildSearchCountryRequestUrl("Romania"))
+                .GET()
+                .build();
+
+        final HttpResponse<String> searchResponse = this.httpClient.send(searchUsersRequest, HttpResponse.BodyHandlers.ofString());
+        assertHttpResponseStatusCodeInSuccessRange(searchResponse);
+
+        final Map<String, String> expected = Map.of(
+                "$[0].firstName", "user3",
+                "$[0].lastName", "TheThird",
+                "$[0].email", "user3@yahoo.com",
+                "$[0].addresses[0].addressLine1", "A street in Romania",
+                "$[0].addresses[0].country", "Romania",
+                "$[0].addresses[0].city", "Bucharest",
+                "$[0].addresses[0].state", "Bucharest",
+                "$[0].addresses[0].zip", "0340C100"
+        );
+
+        assertJsonPathsWithValues(searchResponse, expected);
+    }
+
     private HttpClient createHttpClient() {
         return HttpClient.newBuilder()
                 .version(HttpClient.Version.HTTP_1_1)
@@ -168,6 +260,18 @@ public class UserControllerIT {
                 .build()
                 .toUri();
     }
+
+    private URI buildSearchCountryRequestUrl(final String country) {
+        return UriComponentsBuilder.newInstance()
+                .scheme("http")
+                .host("localhost")
+                .port(PORT)
+                .path("users")
+                .queryParam("country", country)
+                .build()
+                .toUri();
+    }
+
 
     private void assertJsonPathsWithValues(final HttpResponse<String> response, final Map<String, String> expectedValues) {
         final String responseBody = response.body();

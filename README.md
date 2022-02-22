@@ -1,2 +1,2 @@
-# cloudbeds
+# Cloudbeds Microservice API
 Cloudbeds repository
