@@ -19,7 +19,6 @@ public class PasswordConverterTest {
         passwordConverter = new PasswordConverter("MySuperSecretKey");
     }
 
-
     private static Stream<Arguments> provideParametersForConvertToDatabaseColumnTest() {
         return Stream.of(
                 Arguments.of("a-small-password", "tU+bETjKd1Ph9DPO+CSprado+mdGKSgOMcFcvJwfXas="),
