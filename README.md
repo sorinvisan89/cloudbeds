@@ -27,12 +27,13 @@ It consist of a GRPC server which has one operation:
     mvn clean install -DskipIT
     ```
 
-###Screenshots
+### Screenshots
 
-###Integration tests
+### Integration tests
 ![Integration_tests](https://github.com/sorinvisan89/cloudbeds/blob/main/images/integration-tests.png)
 
-
+### Swagger UI
+![Swagger_UI](https://github.com/sorinvisan89/cloudbeds/blob/main/images/swagger-ui.png)
 
 
 ### Integration tests
