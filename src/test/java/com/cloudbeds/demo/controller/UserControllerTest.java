@@ -1,4 +1,4 @@
-package com.cloudbeds.demo.web;
+package com.cloudbeds.demo.controller;
 
 import com.cloudbeds.demo.exception.handler.ErrorResponse;
 import com.cloudbeds.demo.exception.handler.ValidationError;
@@ -7,9 +7,10 @@ import com.cloudbeds.demo.model.request.CreateUserRequestDTO;
 import com.cloudbeds.demo.model.response.UserResponseDTO;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.io.Resources;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.jdbc.EmbeddedDatabaseConnection;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.web.server.LocalServerPort;
@@ -19,17 +20,19 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
+import static com.cloudbeds.demo.utils.TestUtils.readFromFixture;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@AutoConfigureTestDatabase(connection = EmbeddedDatabaseConnection.H2)
 public class UserControllerTest {
 
     @LocalServerPort
@@ -222,11 +225,5 @@ public class UserControllerTest {
     }
 
 
-    private <T> T readFromFixture(final String fixtureName, final TypeReference<T> typeReference) throws IOException {
-        final URL url = Resources.getResource(fixtureName);
-        final String file = url.getFile();
-        try (InputStream reader = new FileInputStream(file)) {
-            return objectMapper.readValue(reader, typeReference);
-        }
-    }
+
 }

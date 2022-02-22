@@ -4,7 +4,7 @@ RUN mkdir -p /app/cloudbeds-app
 WORKDIR /app/cloudbeds-app
 ADD . /app/cloudbeds-app
 
-RUN mvn clean install -DskipTests
+RUN mvn clean install -DskipTests -DskipIT
 RUN ls -la /app/cloudbeds-app/target/
 
 FROM adoptopenjdk/openjdk11:jre-11.0.3_7-alpine
