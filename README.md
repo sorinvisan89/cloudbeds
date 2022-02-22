@@ -27,7 +27,7 @@ It consist of a GRPC server which has one operation:
     mvn clean install -DskipIT
     ```
 
-### Screenshots
+## Screenshots
 
 ### System tests
 ![System_tests](https://github.com/sorinvisan89/cloudbeds/blob/main/images/system-tests.png)
