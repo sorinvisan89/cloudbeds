@@ -2,7 +2,7 @@ package com.cloudbeds.demo.mapper;
 
 import com.cloudbeds.demo.entity.AddressEntity;
 import com.cloudbeds.demo.entity.UserEntity;
-import com.cloudbeds.demo.model.request.AddUserAddressRequestDTO;
+import com.cloudbeds.demo.model.request.CreateAddressRequestDTO;
 import com.cloudbeds.demo.model.request.CreateUserRequestDTO;
 import com.cloudbeds.demo.model.response.AddressResponseDTO;
 import com.cloudbeds.demo.model.response.UserResponseDTO;
@@ -47,9 +47,9 @@ public class CustomMapperTest {
     }
 
     @Test
-    public void mapRequest_whenAddUserAddressRequestDTO_shouldReturnExpected() {
+    public void mapRequest_whenCreateAddressRequestDTO_shouldReturnExpected() {
 
-        final AddUserAddressRequestDTO addUserAddressRequestDTO = AddUserAddressRequestDTO.builder()
+        final CreateAddressRequestDTO addUserAddressRequestDTO = CreateAddressRequestDTO.builder()
                 .addressLine1("line1")
                 .addressLine2("line2")
                 .country("Romania")

@@ -16,7 +16,7 @@ CREATE TABLE addresses
     CITY varchar(255) not null,
     STATE varchar(255) not null,
     COUNTRY varchar(255) not null,
-    ZIP varchar(255) not null,
+    ZIP varchar(255) not null unique,
     primary key (ID)
 );
 

@@ -3,21 +3,17 @@ package com.cloudbeds.demo.controller;
 import com.cloudbeds.demo.exception.handler.ErrorResponse;
 import com.cloudbeds.demo.exception.handler.ValidationError;
 import com.cloudbeds.demo.model.request.AddUserAddressRequestDTO;
+import com.cloudbeds.demo.model.request.CreateAddressRequestDTO;
 import com.cloudbeds.demo.model.request.CreateUserRequestDTO;
+import com.cloudbeds.demo.model.response.AddressResponseDTO;
 import com.cloudbeds.demo.model.response.UserResponseDTO;
+import com.cloudbeds.demo.utils.AbstractControllerTest;
 import com.fasterxml.jackson.core.type.TypeReference;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.jdbc.EmbeddedDatabaseConnection;
-import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.IOException;
@@ -31,26 +27,13 @@ import static com.cloudbeds.demo.utils.TestUtils.readFromFixture;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@AutoConfigureTestDatabase(connection = EmbeddedDatabaseConnection.H2)
-@ActiveProfiles("test")
-public class UserControllerTest {
-
-    @LocalServerPort
-    private int port;
-
-    @Autowired
-    private TestRestTemplate restTemplate;
-
-    private String context() {
-        return "http://localhost:" + port;
-    }
+public class UserControllerTest extends AbstractControllerTest {
 
     @Test
-    public void addUser_whenValidInput_shouldReturnExpected() throws IOException {
+    public void createUser_whenValidInput_shouldReturnExpected() throws IOException {
 
         final HttpHeaders headers = new HttpHeaders();
-        final CreateUserRequestDTO requestBody = readFromFixture("add_user_valid.json", new TypeReference<CreateUserRequestDTO>() {
+        final CreateUserRequestDTO requestBody = readFromFixture("create_user_valid_1.json", new TypeReference<CreateUserRequestDTO>() {
         });
 
         final HttpEntity<CreateUserRequestDTO> request = new HttpEntity<>(requestBody, headers);
@@ -68,10 +51,10 @@ public class UserControllerTest {
     }
 
     @Test
-    public void addUser_whenInvalidInput_shouldReturnError() throws IOException {
+    public void createUser_whenInvalidInput_shouldReturnError() throws IOException {
 
         final HttpHeaders headers = new HttpHeaders();
-        final CreateUserRequestDTO requestBody = readFromFixture("add_user_invalid.json", new TypeReference<CreateUserRequestDTO>() {
+        final CreateUserRequestDTO requestBody = readFromFixture("create_user_invalid.json", new TypeReference<CreateUserRequestDTO>() {
         });
 
         final HttpEntity<CreateUserRequestDTO> request = new HttpEntity<>(requestBody, headers);
@@ -91,9 +74,9 @@ public class UserControllerTest {
 
 
     @Test
-    public void addUser_whenEmailAlreadyRegistered_shouldReturnError() throws IOException {
+    public void createUser_whenEmailAlreadyRegistered_shouldReturnError() throws IOException {
         final HttpHeaders headers = new HttpHeaders();
-        final CreateUserRequestDTO userRequestBody = readFromFixture("add_user_not_unique_email.json", new TypeReference<CreateUserRequestDTO>() {
+        final CreateUserRequestDTO userRequestBody = readFromFixture("create_user_not_unique_email.json", new TypeReference<CreateUserRequestDTO>() {
         });
 
         final HttpEntity<CreateUserRequestDTO> request = new HttpEntity<>(userRequestBody, headers);
@@ -113,9 +96,11 @@ public class UserControllerTest {
     }
 
     @Test
-    public void addAddress_whenValidInput_shouldReturnExpected() throws IOException {
+    public void addUserAddress_whenValidInput_shouldReturnExpected() throws IOException {
+
+        // First create the user
         final HttpHeaders headers = new HttpHeaders();
-        final CreateUserRequestDTO userRequestBody = readFromFixture("add_user_valid_2.json", new TypeReference<CreateUserRequestDTO>() {
+        final CreateUserRequestDTO userRequestBody = readFromFixture("create_user_valid_2.json", new TypeReference<CreateUserRequestDTO>() {
         });
 
         final HttpEntity<CreateUserRequestDTO> userRequest = new HttpEntity<>(userRequestBody, headers);
@@ -124,15 +109,27 @@ public class UserControllerTest {
         final UserResponseDTO user = userResult.getBody();
         assertThat(user, notNullValue());
 
-        // Now add an address for that user
+        // Then create an address
 
-        final AddUserAddressRequestDTO addressRequestBody = readFromFixture("add_address_valid.json", new TypeReference<AddUserAddressRequestDTO>() {
+        final CreateAddressRequestDTO createAddressRequestDTO = readFromFixture("create_address_valid_1.json", new TypeReference<CreateAddressRequestDTO>() {
         });
-        final HttpEntity<AddUserAddressRequestDTO> addressRequest = new HttpEntity<>(addressRequestBody, headers);
-        final ResponseEntity<UserResponseDTO> addressResult = this.restTemplate.postForEntity(context() + "/user/" + user.getUserId() + "/address", addressRequest, UserResponseDTO.class);
-        assertThat(addressResult.getStatusCode(), equalTo(HttpStatus.OK));
+        final HttpEntity<CreateAddressRequestDTO> createAddressRequest = new HttpEntity<>(createAddressRequestDTO, headers);
+        final ResponseEntity<AddressResponseDTO> addressResult = this.restTemplate.postForEntity(context() + "/address", createAddressRequest, AddressResponseDTO.class);
+        assertThat(addressResult.getStatusCode(), equalTo(HttpStatus.CREATED));
+        assertThat(addressResult.getBody(), notNullValue());
 
-        final UserResponseDTO actual = addressResult.getBody();
+        final Integer addressId = addressResult.getBody().getAddressId();
+
+        // Now add an address for that user
+        final AddUserAddressRequestDTO addUserAddressRequestDTO = AddUserAddressRequestDTO.builder()
+                .addressId(addressId)
+                .build();
+
+        final HttpEntity<AddUserAddressRequestDTO> addAddressRequest = new HttpEntity<>(addUserAddressRequestDTO, headers);
+        final ResponseEntity<UserResponseDTO> addAddressResult = this.restTemplate.postForEntity(context() + "/user/" + user.getUserId() + "/address", addAddressRequest, UserResponseDTO.class);
+        assertThat(addAddressResult.getStatusCode(), equalTo(HttpStatus.OK));
+
+        final UserResponseDTO actual = addAddressResult.getBody();
 
         assertThat(actual, notNullValue());
         assertThat(actual.getAddresses(), notNullValue());
@@ -140,37 +137,110 @@ public class UserControllerTest {
         assertThat(actual.getAddresses().get(0), notNullValue());
 
         assertThat(actual.getAddresses().get(0).getAddressId(), notNullValue());
-        assertThat(actual.getAddresses().get(0).getAddressLine1(), equalTo(addressRequestBody.getAddressLine1()));
-        assertThat(actual.getAddresses().get(0).getAddressLine2(), equalTo(addressRequestBody.getAddressLine2()));
-        assertThat(actual.getAddresses().get(0).getCity(), equalTo(addressRequestBody.getCity()));
-        assertThat(actual.getAddresses().get(0).getCountry(), equalTo(addressRequestBody.getCountry()));
-        assertThat(actual.getAddresses().get(0).getState(), equalTo(addressRequestBody.getState()));
-        assertThat(actual.getAddresses().get(0).getZip(), equalTo(addressRequestBody.getZip()));
+        assertThat(actual.getAddresses().get(0).getAddressLine1(), equalTo(createAddressRequestDTO.getAddressLine1()));
+        assertThat(actual.getAddresses().get(0).getAddressLine2(), equalTo(createAddressRequestDTO.getAddressLine2()));
+        assertThat(actual.getAddresses().get(0).getCity(), equalTo(createAddressRequestDTO.getCity()));
+        assertThat(actual.getAddresses().get(0).getCountry(), equalTo(createAddressRequestDTO.getCountry()));
+        assertThat(actual.getAddresses().get(0).getState(), equalTo(createAddressRequestDTO.getState()));
+        assertThat(actual.getAddresses().get(0).getZip(), equalTo(createAddressRequestDTO.getZip()));
+    }
 
+    @Test
+    public void addUserAddress_whenAddressDoesNotExist_shouldReturnError() throws IOException {
+        // First create the user
+        final HttpHeaders headers = new HttpHeaders();
+        final CreateUserRequestDTO userRequestBody = readFromFixture("create_user_valid_3.json", new TypeReference<CreateUserRequestDTO>() {
+        });
+
+        final HttpEntity<CreateUserRequestDTO> userRequest = new HttpEntity<>(userRequestBody, headers);
+        final ResponseEntity<UserResponseDTO> userResult = this.restTemplate.postForEntity(context() + "/user", userRequest, UserResponseDTO.class);
+        assertThat(userResult.getStatusCode(), equalTo(HttpStatus.CREATED));
+        final UserResponseDTO user = userResult.getBody();
+        assertThat(user, notNullValue());
+
+        // Now try to add an address that does not exist
+
+        final Integer addressIdNotPresent = 999999999;
+
+        final AddUserAddressRequestDTO addUserAddressRequestDTO = AddUserAddressRequestDTO.builder()
+                .addressId(addressIdNotPresent)
+                .build();
+
+        final HttpEntity<AddUserAddressRequestDTO> addAddressRequest = new HttpEntity<>(addUserAddressRequestDTO, headers);
+        final ResponseEntity<UserResponseDTO> addAddressResult = this.restTemplate.postForEntity(context() + "/user/" + user.getUserId() + "/address", addAddressRequest, UserResponseDTO.class);
+        assertThat(addAddressResult.getStatusCode(), equalTo(HttpStatus.NOT_FOUND));
+    }
+
+    @Test
+    public void addAddresses_whenMultipleAddressesToSameUser_shouldReturnExpected() throws IOException {
+        final UserResponseDTO userCreated = createUser("create_user_valid_6.json");
+        final AddressResponseDTO address1 = createAddress("create_address_valid_3.json");
+        final AddressResponseDTO address2 = createAddress("create_address_valid_4.json");
+        addAddressToUser(userCreated.getUserId(), address1.getAddressId());
+        final UserResponseDTO userWithTwoAddresses = addAddressToUser(userCreated.getUserId(), address2.getAddressId());
+
+        assertThat(userWithTwoAddresses.getAddresses(), hasSize(2));
+        assertThat(userWithTwoAddresses.getAddresses(), containsInAnyOrder(address1, address2));
+    }
+
+    @Test
+    public void addAddresses_whenSameAddressToDifferentUsers_shouldReturnExpected() throws IOException {
+        final UserResponseDTO userCreated1 = createUser("create_user_valid_4.json");
+        final UserResponseDTO userCreated2 = createUser("create_user_valid_5.json");
+        final AddressResponseDTO address = createAddress("create_address_valid_5.json");
+
+        final UserResponseDTO firstUserWithAddress = addAddressToUser(userCreated1.getUserId(), address.getAddressId());
+        final UserResponseDTO secondUserWithAddress = addAddressToUser(userCreated2.getUserId(), address.getAddressId());
+
+        assertThat(firstUserWithAddress.getAddresses(), hasSize(1));
+        assertThat(firstUserWithAddress.getAddresses().get(0).getAddressId(), equalTo(address.getAddressId()));
+        assertThat(firstUserWithAddress.getAddresses().get(0).getAddressLine1(), equalTo(address.getAddressLine1()));
+        assertThat(firstUserWithAddress.getAddresses().get(0).getZip(), equalTo(address.getZip()));
+        assertThat(firstUserWithAddress.getAddresses().get(0).getCountry(), equalTo(address.getCountry()));
+        assertThat(firstUserWithAddress.getAddresses().get(0).getState(), equalTo(address.getState()));
+        assertThat(firstUserWithAddress.getAddresses().get(0).getCity(), equalTo(address.getCity()));
+
+        assertThat(secondUserWithAddress.getAddresses(), hasSize(1));
+        assertThat(secondUserWithAddress.getAddresses().get(0).getAddressId(), equalTo(address.getAddressId()));
+        assertThat(secondUserWithAddress.getAddresses().get(0).getAddressLine1(), equalTo(address.getAddressLine1()));
+        assertThat(secondUserWithAddress.getAddresses().get(0).getZip(), equalTo(address.getZip()));
+        assertThat(secondUserWithAddress.getAddresses().get(0).getCountry(), equalTo(address.getCountry()));
+        assertThat(secondUserWithAddress.getAddresses().get(0).getState(), equalTo(address.getState()));
+        assertThat(secondUserWithAddress.getAddresses().get(0).getCity(), equalTo(address.getCity()));
     }
 
     @Test
     public void getUsers_whenSearchByCountry_shouldReturnExpected() throws IOException {
         // First create 3 users
 
-        //Lives in France
-        final UserResponseDTO user1 = createUserAndAddAddress("add_user_by_country_1.json", "add_address_by_country_1.json");
+        // Lives in France
+        final UserResponseDTO user1 = createUserAndAddAddress("create_user_for_country_search_1.json", "create_address_for_country_search_1.json");
 
-        //Lives in France and Romania
-        //Add the Romanian address
-        final UserResponseDTO user2 = createUserAndAddAddress("add_user_by_country_2.json", "add_address_by_country_3.json");
+        // Lives in France and Romania
+        // Add the Romanian address
+        final UserResponseDTO user2 = createUserAndAddAddress("create_user_for_country_search_2.json", "create_address_for_country_search_3.json");
 
-        //Also add French address
-        final AddUserAddressRequestDTO addressRequestBody = readFromFixture("add_address_by_country_2.json", new TypeReference<AddUserAddressRequestDTO>() {
+        // Also add French address
+        final CreateAddressRequestDTO createAddressRequestDTO = readFromFixture("create_address_for_country_search_2.json", new TypeReference<CreateAddressRequestDTO>() {
         });
         final HttpHeaders headers = new HttpHeaders();
-        final HttpEntity<AddUserAddressRequestDTO> addressRequest = new HttpEntity<>(addressRequestBody, headers);
-        final ResponseEntity<UserResponseDTO> addressResult = this.restTemplate.postForEntity(context() + "/user/" + user2.getUserId() + "/address", addressRequest, UserResponseDTO.class);
-        assertThat(addressResult.getStatusCode(), equalTo(HttpStatus.OK));
+        final HttpEntity<CreateAddressRequestDTO> createAddressRequest = new HttpEntity<>(createAddressRequestDTO, headers);
+        final ResponseEntity<AddressResponseDTO> addressResult = this.restTemplate.postForEntity(context() + "/address", createAddressRequest, AddressResponseDTO.class);
+        assertThat(addressResult.getStatusCode(), equalTo(HttpStatus.CREATED));
+        assertThat(addressResult.getBody(), notNullValue());
 
-        //Lives in Germany
-        final UserResponseDTO user3 = createUserAndAddAddress("add_user_by_country_3.json", "add_address_by_country_4.json");
+        // Link French address to user
+        final AddUserAddressRequestDTO addUserAddressRequestDTO = AddUserAddressRequestDTO.builder()
+                .addressId(addressResult.getBody().getAddressId())
+                .build();
 
+        final HttpEntity<AddUserAddressRequestDTO> addAddressRequest = new HttpEntity<>(addUserAddressRequestDTO, headers);
+        final ResponseEntity<UserResponseDTO> addedUserAddressResult = this.restTemplate.postForEntity(context() + "/user/" + user2.getUserId() + "/address", addAddressRequest, UserResponseDTO.class);
+        assertThat(addedUserAddressResult.getStatusCode(), equalTo(HttpStatus.OK));
+
+        // Lives in Germany
+        final UserResponseDTO user3 = createUserAndAddAddress("create_user_for_country_search_3.json", "create_address_for_country_search_4.json");
+        assertThat(user3, notNullValue());
         // Only two users should be retrieved.
         // User1 and also user2 since user2 two addresses, one of which is in the requested country.
 
@@ -213,16 +283,28 @@ public class UserControllerTest {
         assertThat(userResult.getStatusCode(), equalTo(HttpStatus.CREATED));
         final UserResponseDTO user = userResult.getBody();
         assertThat(user, notNullValue());
+        assertThat(user.getUserId(), notNullValue());
 
-        final AddUserAddressRequestDTO addressRequestBody = readFromFixture(addressFixture, new TypeReference<AddUserAddressRequestDTO>() {
+        final CreateAddressRequestDTO addressRequestBody = readFromFixture(addressFixture, new TypeReference<CreateAddressRequestDTO>() {
         });
-        final HttpEntity<AddUserAddressRequestDTO> addressRequest = new HttpEntity<>(addressRequestBody, headers);
-        final ResponseEntity<UserResponseDTO> addressResult = this.restTemplate.postForEntity(context() + "/user/" + user.getUserId() + "/address", addressRequest, UserResponseDTO.class);
-        assertThat(addressResult.getStatusCode(), equalTo(HttpStatus.OK));
-        assertThat(addressResult.getBody(), notNullValue());
-        return addressResult.getBody();
+        final HttpEntity<CreateAddressRequestDTO> createAddressRequest = new HttpEntity<>(addressRequestBody, headers);
+        final ResponseEntity<AddressResponseDTO> createAddressResult = this.restTemplate.postForEntity(context() + "/address", createAddressRequest, AddressResponseDTO.class);
+        assertThat(createAddressResult.getStatusCode(), equalTo(HttpStatus.CREATED));
+        assertThat(createAddressResult.getBody(), notNullValue());
+
+        final Integer addressId = createAddressResult.getBody().getAddressId();
+        assertThat(addressId, notNullValue());
+
+        final AddUserAddressRequestDTO addUserAddressRequestDTO = AddUserAddressRequestDTO.builder()
+                .addressId(addressId)
+                .build();
+
+        final HttpEntity<AddUserAddressRequestDTO> addAddressRequest = new HttpEntity<>(addUserAddressRequestDTO, headers);
+        final ResponseEntity<UserResponseDTO> addAddressResult = this.restTemplate.postForEntity(context() + "/user/" + user.getUserId() + "/address", addAddressRequest, UserResponseDTO.class);
+        assertThat(addAddressResult.getStatusCode(), equalTo(HttpStatus.OK));
+        assertThat(addAddressResult.getBody(), notNullValue());
+
+        return addAddressResult.getBody();
     }
-
-
 
 }

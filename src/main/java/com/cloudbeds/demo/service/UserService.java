@@ -2,12 +2,13 @@ package com.cloudbeds.demo.service;
 
 import com.cloudbeds.demo.entity.AddressEntity;
 import com.cloudbeds.demo.entity.UserEntity;
+import com.cloudbeds.demo.exception.custom.AddressNotFoundException;
 import com.cloudbeds.demo.exception.custom.EmailAlreadyRegisteredException;
 import com.cloudbeds.demo.exception.custom.UserNotFoundException;
 import com.cloudbeds.demo.mapper.CustomMapper;
-import com.cloudbeds.demo.model.response.UserResponseDTO;
 import com.cloudbeds.demo.model.request.AddUserAddressRequestDTO;
 import com.cloudbeds.demo.model.request.CreateUserRequestDTO;
+import com.cloudbeds.demo.model.response.UserResponseDTO;
 import com.cloudbeds.demo.repository.AddressRepository;
 import com.cloudbeds.demo.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,14 +48,25 @@ public class UserService {
     }
 
     public UserResponseDTO addUserAddress(final Integer userId, final AddUserAddressRequestDTO userAddressRequestDTO) {
-        final UserEntity existing = userRepository.findById(userId)
+        final UserEntity existingUser = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException(userId));
 
-        final AddressEntity newAddress = customMapper.mapRequest(userAddressRequestDTO);
-        final AddressEntity saveAddress = addressRepository.save(newAddress);
+        final List<Integer> existingAddresses = existingUser.getAddresses()
+                .stream()
+                .map(AddressEntity::getAddressId)
+                .collect(Collectors.toList());
 
-        existing.getAddresses().add(saveAddress);
-        final UserEntity saved = userRepository.save(existing);
+        final Integer addressIdToAdd = userAddressRequestDTO.getAddressId();
+
+        if (existingAddresses.contains(addressIdToAdd)) {
+            return customMapper.mapResponse(existingUser);
+        }
+
+        final AddressEntity existingAddress = addressRepository.findById(addressIdToAdd)
+                .orElseThrow(() -> new AddressNotFoundException(addressIdToAdd));
+
+        existingUser.getAddresses().add(existingAddress);
+        final UserEntity saved = userRepository.save(existingUser);
 
         return customMapper.mapResponse(saved);
     }

@@ -1,9 +1,10 @@
 # Cloudbeds Microservice API
 This is a POC Microservice implemented based on the given requirements.
-It consists of a single REST controller which has 3 operations:
+It consists of two REST controllers which have a total of 4 operations:
 1) Create an user
-2) Add an address to that user
-3) Search users by country
+2) Create an address   
+3) Add an address to that user
+4) Search users by country
 
 It consists of a GRPC server which has one operation:
 1) Retrieve an user by Id.
@@ -86,6 +87,7 @@ Swagger UI is used in order to facilitate working with the REST endpoints.
 
 ### GRPC
 Communication mechanism for the secondary APIs(retrieve user by id).
+It uses Probuffers which are faster than Avro.
 
 ### FailSafe Maven plugin
 This is used for integration tests.

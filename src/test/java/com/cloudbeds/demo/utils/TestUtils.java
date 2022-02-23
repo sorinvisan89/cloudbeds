@@ -5,6 +5,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.http.HttpResponse;
+
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.notNullValue;
 
 public class TestUtils {
 
@@ -18,5 +22,15 @@ public class TestUtils {
         try (InputStream reader = TestUtils.class.getResourceAsStream("/" + fixtureName)) {
             return objectMapper.readValue(reader, typeReference);
         }
+    }
+
+    public static String extractIdFromHeaders(final HttpResponse<String> response) {
+        final String createdPath = response.headers().allValues("location")
+                .stream()
+                .findFirst()
+                .orElse(null);
+
+        assertThat(createdPath, notNullValue());
+        return createdPath.substring(createdPath.lastIndexOf("/") + 1);
     }
 }

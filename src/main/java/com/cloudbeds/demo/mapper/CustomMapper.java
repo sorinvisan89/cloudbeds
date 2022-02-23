@@ -2,10 +2,10 @@ package com.cloudbeds.demo.mapper;
 
 import com.cloudbeds.demo.entity.AddressEntity;
 import com.cloudbeds.demo.entity.UserEntity;
+import com.cloudbeds.demo.model.request.CreateAddressRequestDTO;
+import com.cloudbeds.demo.model.request.CreateUserRequestDTO;
 import com.cloudbeds.demo.model.response.AddressResponseDTO;
 import com.cloudbeds.demo.model.response.UserResponseDTO;
-import com.cloudbeds.demo.model.request.AddUserAddressRequestDTO;
-import com.cloudbeds.demo.model.request.CreateUserRequestDTO;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Mappings;
@@ -36,7 +36,7 @@ public interface CustomMapper {
             @Mapping(target = "address1", source = "addressLine1"),
             @Mapping(target = "address2", source = "addressLine2")
     })
-    AddressEntity mapRequest(final AddUserAddressRequestDTO requestDTO);
+    AddressEntity mapRequest(final CreateAddressRequestDTO requestDTO);
 
 
 }

@@ -1,29 +1,22 @@
 package com.cloudbeds.demo.integration;
 
-import com.jayway.jsonpath.JsonPath;
+import com.cloudbeds.demo.utils.AbstractIT;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.IOException;
-import java.net.URI;
-import java.net.http.HttpClient;
+import java.io.InputStream;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.time.Duration;
 import java.util.Map;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.cloudbeds.demo.utils.TestUtils.extractIdFromHeaders;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.notNullValue;
 
-public class UserControllerIT {
-
-    private static final int PORT = 8080;
-    private static final String CONTENT_TYPE = "Content-Type";
-    private static final String APPLICATION_JSON = "application/json";
-
-    private HttpClient httpClient;
+public class UserIT extends AbstractIT {
 
     @Before
     public void setup() {
@@ -38,7 +31,7 @@ public class UserControllerIT {
                 .uri(buildCreateUserRequestUrl())
                 .POST(
                         HttpRequest.BodyPublishers.ofInputStream(() ->
-                                UserControllerIT.class.getResourceAsStream("/add_user_valid.json")))
+                                UserIT.class.getResourceAsStream("/create_user_valid_1.json")))
                 .build();
 
         final HttpResponse<String> response = this.httpClient.send(request, HttpResponse.BodyHandlers.ofString());
@@ -61,11 +54,11 @@ public class UserControllerIT {
                 .uri(buildCreateUserRequestUrl())
                 .POST(
                         HttpRequest.BodyPublishers.ofInputStream(() ->
-                                UserControllerIT.class.getResourceAsStream("/add_user_invalid.json")))
+                                UserIT.class.getResourceAsStream("/create_user_invalid.json")))
                 .build();
 
         final HttpResponse<String> response = this.httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-        assertThat(response.statusCode()).isEqualTo(HttpStatus.BAD_REQUEST.value());
+        assertThat(response.statusCode(), equalTo(HttpStatus.BAD_REQUEST.value()));
     }
 
     @Test
@@ -76,50 +69,61 @@ public class UserControllerIT {
                 .uri(buildCreateUserRequestUrl())
                 .POST(
                         HttpRequest.BodyPublishers.ofInputStream(() ->
-                                UserControllerIT.class.getResourceAsStream("/add_user_not_unique_email.json")))
+                                UserIT.class.getResourceAsStream("/create_user_not_unique_email.json")))
                 .build();
 
         // First request should pass
         final HttpResponse<String> response = this.httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-        assertThat(response.statusCode()).isEqualTo(HttpStatus.CREATED.value());
+        assertThat(response.statusCode(), equalTo(HttpStatus.CREATED.value()));
 
         // This should fail since we already have the email in the DB
         final HttpResponse<String> secondResponse = this.httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-        assertThat(secondResponse.statusCode()).isEqualTo(HttpStatus.CONFLICT.value());
+        assertThat(secondResponse.statusCode(), equalTo(HttpStatus.CONFLICT.value()));
+        assertErrorMessage(secondResponse.body(), "$.message", "Email 'non_unique_email@yahoo.com' is already registered to another user!");
     }
 
     @Test
     public void addAddressToUser_whenValidInput_shouldReturnExpected() throws IOException, InterruptedException {
 
+        // First create user
         final HttpRequest userRequest = HttpRequest.newBuilder()
                 .header(CONTENT_TYPE, APPLICATION_JSON)
                 .uri(buildCreateUserRequestUrl())
                 .POST(
                         HttpRequest.BodyPublishers.ofInputStream(() ->
-                                UserControllerIT.class.getResourceAsStream("/add_user_valid_2.json")))
+                                UserIT.class.getResourceAsStream("/create_user_valid_2.json")))
                 .build();
 
         final HttpResponse<String> userResponse = this.httpClient.send(userRequest, HttpResponse.BodyHandlers.ofString());
         assertHttpResponseStatusCodeInSuccessRange(userResponse);
 
-        final String createdPath = userResponse.headers().allValues("location")
-                .stream()
-                .findFirst()
-                .orElse(null);
+        final String userId = extractIdFromHeaders(userResponse);
 
-        assertThat(createdPath).isNotEqualTo(null);
-        final String userId = createdPath.substring(createdPath.lastIndexOf("/") + 1);
-
+        // Now create first address
         final HttpRequest addressRequest = HttpRequest.newBuilder()
                 .header(CONTENT_TYPE, APPLICATION_JSON)
-                .uri(buildAddAddressToUserRequestUrl(userId))
+                .uri(buildCreateAddressRequestUrl())
                 .POST(
                         HttpRequest.BodyPublishers.ofInputStream(() ->
-                                UserControllerIT.class.getResourceAsStream("/add_address_valid.json")))
+                                UserIT.class.getResourceAsStream("/create_address_valid_1.json")))
                 .build();
 
         final HttpResponse<String> addressResponse = this.httpClient.send(addressRequest, HttpResponse.BodyHandlers.ofString());
         assertHttpResponseStatusCodeInSuccessRange(addressResponse);
+
+        final String addressId = extractIdFromHeaders(addressResponse);
+
+        // Now add the address to the user
+        final HttpRequest addUserAddressRequest = HttpRequest.newBuilder()
+                .header(CONTENT_TYPE, APPLICATION_JSON)
+                .uri(buildAddAddressToUserRequestUrl(userId))
+                .POST(
+                        HttpRequest.BodyPublishers.ofString(createRequestBodyForAddAddress(addressId))
+                )
+                .build();
+
+        final HttpResponse<String> addAddressResponse = this.httpClient.send(addUserAddressRequest, HttpResponse.BodyHandlers.ofString());
+        assertHttpResponseStatusCodeInSuccessRange(addAddressResponse);
 
         final Map<String, String> expected = Map.of(
                 "$.firstName", "another",
@@ -133,78 +137,74 @@ public class UserControllerIT {
                 "$.addresses[0].zip", "400-320"
         );
 
-        assertJsonPathsWithValues(addressResponse, expected);
+        assertJsonPathsWithValues(addAddressResponse, expected);
     }
 
     @Test
     public void getUsers_whenCalledWithCountry_shouldReturnExpected() throws IOException, InterruptedException {
 
-        //Add first user
-
+        // Create first user
         final HttpRequest userRequest1 = HttpRequest.newBuilder()
                 .header(CONTENT_TYPE, APPLICATION_JSON)
                 .uri(buildCreateUserRequestUrl())
                 .POST(
                         HttpRequest.BodyPublishers.ofInputStream(() ->
-                                UserControllerIT.class.getResourceAsStream("/add_user_by_country_1.json")))
+                                UserIT.class.getResourceAsStream("/create_user_for_country_search_1.json")))
                 .build();
 
         final HttpResponse<String> userResponse1 = this.httpClient.send(userRequest1, HttpResponse.BodyHandlers.ofString());
         assertHttpResponseStatusCodeInSuccessRange(userResponse1);
 
-        final String createdPath1 = userResponse1.headers().allValues("location")
-                .stream()
-                .findFirst()
-                .orElse(null);
+        final String userId1 = extractIdFromHeaders(userResponse1);
 
-        assertThat(createdPath1).isNotEqualTo(null);
-        final String userId1 = createdPath1.substring(createdPath1.lastIndexOf("/") + 1);
-
+        // Create first address
         final HttpRequest addressRequest1 = HttpRequest.newBuilder()
                 .header(CONTENT_TYPE, APPLICATION_JSON)
-                .uri(buildAddAddressToUserRequestUrl(userId1))
+                .uri(buildCreateAddressRequestUrl())
                 .POST(
                         HttpRequest.BodyPublishers.ofInputStream(() ->
-                                UserControllerIT.class.getResourceAsStream("/add_address_by_country_1.json")))
+                                UserIT.class.getResourceAsStream("/create_address_for_country_search_1.json")))
                 .build();
 
         final HttpResponse<String> addressResponse1 = this.httpClient.send(addressRequest1, HttpResponse.BodyHandlers.ofString());
         assertHttpResponseStatusCodeInSuccessRange(addressResponse1);
 
-        //Add second user
+        final String addressId1 = extractIdFromHeaders(addressResponse1);
 
+        // Now link the address with the user
+        linkAddressWithUser(userId1, addressId1);
+
+        // Create second user
         final HttpRequest userRequest2 = HttpRequest.newBuilder()
                 .header(CONTENT_TYPE, APPLICATION_JSON)
                 .uri(buildCreateUserRequestUrl())
                 .POST(
                         HttpRequest.BodyPublishers.ofInputStream(() ->
-                                UserControllerIT.class.getResourceAsStream("/add_user_by_country_3.json")))
+                                UserIT.class.getResourceAsStream("/create_user_for_country_search_3.json")))
                 .build();
 
         final HttpResponse<String> userResponse2 = this.httpClient.send(userRequest2, HttpResponse.BodyHandlers.ofString());
         assertHttpResponseStatusCodeInSuccessRange(userResponse2);
 
-        final String createdPath2 = userResponse2.headers().allValues("location")
-                .stream()
-                .findFirst()
-                .orElse(null);
+        final String userId2 = extractIdFromHeaders(userResponse2);
 
-        assertThat(createdPath2).isNotEqualTo(null);
-        final String userId2 = createdPath2.substring(createdPath2.lastIndexOf("/") + 1);
-
+        // Create second address
         final HttpRequest addressRequest2 = HttpRequest.newBuilder()
                 .header(CONTENT_TYPE, APPLICATION_JSON)
-                .uri(buildAddAddressToUserRequestUrl(userId2))
+                .uri(buildCreateAddressRequestUrl())
                 .POST(
                         HttpRequest.BodyPublishers.ofInputStream(() ->
-                                UserControllerIT.class.getResourceAsStream("/add_address_by_country_3.json")))
+                                UserIT.class.getResourceAsStream("/create_address_for_country_search_3.json")))
                 .build();
 
         final HttpResponse<String> addressResponse2 = this.httpClient.send(addressRequest2, HttpResponse.BodyHandlers.ofString());
         assertHttpResponseStatusCodeInSuccessRange(addressResponse2);
 
-        // Now search the users by country
+        // Now link the address with the user
+        final String addressId2 = extractIdFromHeaders(addressResponse2);
+        linkAddressWithUser(userId2, addressId2);
 
+        // Now search the users by country
         final HttpRequest searchUsersRequest = HttpRequest.newBuilder()
                 .header(CONTENT_TYPE, APPLICATION_JSON)
                 .uri(buildSearchCountryRequestUrl("Romania"))
@@ -228,56 +228,24 @@ public class UserControllerIT {
         assertJsonPathsWithValues(searchResponse, expected);
     }
 
-    private HttpClient createHttpClient() {
-        return HttpClient.newBuilder()
-                .version(HttpClient.Version.HTTP_1_1)
-                .followRedirects(HttpClient.Redirect.NORMAL)
-                .connectTimeout(Duration.ofMillis(2000))
-                .build();
+    @Test
+    public void addAddress_whenMultipleUsersShareTheSameAddress_shouldReturnExpected() throws IOException, InterruptedException {
+        final String userId1 = createUser("create_user_valid_7.json");
+        final String userId2 = createUser("create_user_valid_8.json");
+        final String addressId = createAddress("create_address_valid_10.json");
+
+        linkAddressWithUser(userId1, addressId);
+        linkAddressWithUser(userId2, addressId);
     }
 
-    private void assertHttpResponseStatusCodeInSuccessRange(final HttpResponse<String> response) {
-        assertThat(response.statusCode()).isBetween(200, 299);
+    @Test
+    public void addAddress_whenMultipleAddressesToSameUser_shouldReturnExpected() throws IOException, InterruptedException {
+        final String userId = createUser("create_user_valid_9.json");
+        final String addressId1 = createAddress("create_address_valid_11.json");
+        final String addressId2 = createAddress("create_address_valid_12.json");
+
+        linkAddressWithUser(userId, addressId1);
+        linkAddressWithUser(userId, addressId2);
     }
 
-    private URI buildCreateUserRequestUrl() {
-        return UriComponentsBuilder.newInstance()
-                .scheme("http")
-                .host("localhost")
-                .port(PORT)
-                .path("user")
-                .build()
-                .toUri();
-    }
-
-    private URI buildAddAddressToUserRequestUrl(final String userId) {
-        return UriComponentsBuilder.newInstance()
-                .scheme("http")
-                .host("localhost")
-                .port(PORT)
-                .pathSegment("user", userId, "address")
-                .build()
-                .toUri();
-    }
-
-    private URI buildSearchCountryRequestUrl(final String country) {
-        return UriComponentsBuilder.newInstance()
-                .scheme("http")
-                .host("localhost")
-                .port(PORT)
-                .path("users")
-                .queryParam("country", country)
-                .build()
-                .toUri();
-    }
-
-
-    private void assertJsonPathsWithValues(final HttpResponse<String> response, final Map<String, String> expectedValues) {
-        final String responseBody = response.body();
-
-        expectedValues.forEach((jsonPath, expectedValue) -> {
-            final String actualValue = JsonPath.parse(responseBody).read(jsonPath);
-            org.hamcrest.MatcherAssert.assertThat(actualValue, equalTo(expectedValue));
-        });
-    }
 }

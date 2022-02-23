@@ -1,5 +1,7 @@
 package com.cloudbeds.demo.exception.handler;
 
+import com.cloudbeds.demo.exception.custom.AddressNotFoundException;
+import com.cloudbeds.demo.exception.custom.DuplicateAddressException;
 import com.cloudbeds.demo.exception.custom.EmailAlreadyRegisteredException;
 import com.cloudbeds.demo.exception.custom.UserNotFoundException;
 import lombok.extern.slf4j.Slf4j;
@@ -27,18 +29,18 @@ public class GlobalExceptionHandler {
         return ErrorResponse.errorResponse("Validation error", validationErrors, fullUrl(webRequest));
     }
 
-    @ExceptionHandler(EmailAlreadyRegisteredException.class)
+    @ExceptionHandler({EmailAlreadyRegisteredException.class, DuplicateAddressException.class})
     @ResponseStatus(CONFLICT)
     @ResponseBody
-    public ErrorResponse handleUserAlreadyRegistered(final EmailAlreadyRegisteredException exception, final WebRequest webRequest) {
+    public ErrorResponse handleDuplicates(final Exception exception, final WebRequest webRequest) {
         logError(exception, webRequest);
         return ErrorResponse.errorResponse(exception.getMessage(), fullUrl(webRequest));
     }
 
-    @ExceptionHandler(UserNotFoundException.class)
+    @ExceptionHandler({UserNotFoundException.class, AddressNotFoundException.class})
     @ResponseStatus(NOT_FOUND)
     @ResponseBody
-    public ErrorResponse handleUserNotFound(final UserNotFoundException exception, final WebRequest webRequest) {
+    public ErrorResponse handleNotFound(final Exception exception, final WebRequest webRequest) {
         logError(exception, webRequest);
         return ErrorResponse.errorResponse(exception.getMessage(), fullUrl(webRequest));
     }

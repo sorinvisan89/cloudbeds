@@ -73,7 +73,7 @@ public class UserController {
             },
             requestBody =
             @io.swagger.v3.oas.annotations.parameters.RequestBody(
-                    description = "The request body for adding a new address",
+                    description = "The request body for adding a new address to an existing user",
                     required = true,
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = AddUserAddressRequestDTO.class))
             )
